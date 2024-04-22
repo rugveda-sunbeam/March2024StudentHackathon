@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+    <fullyQualifiedTypeName name="com.sunbeam.dao.UserDao"/>
+    <fullyQualifiedTypeName name="com.sunbeam.entity.User"/>
+    <fullyQualifiedTypeName name="java.util.Scanner"/>
+    <fullyQualifiedTypeName name="java.lang.AutoCloseable"/>
+    <fullyQualifiedTypeName name="com.sunbeam.entity.Category"/>
+    <fullyQualifiedTypeName name="com.sunbeam.utils.DbUtil"/>
+    <fullyQualifiedTypeName name="com.sunbeam.dao.CategoryDAO"/>
+    <fullyQualifiedTypeName name="com.sunbeam.dao.BlogDao"/>
+    <fullyQualifiedTypeName name="java.util.Date"/>
+    <fullyQualifiedTypeName name="java.lang.System"/>
+</qualifiedTypeNameHistroy>

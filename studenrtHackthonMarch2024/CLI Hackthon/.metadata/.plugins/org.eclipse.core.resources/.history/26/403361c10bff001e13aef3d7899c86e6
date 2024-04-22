@@ -1,0 +1,183 @@
+package com.sunbeam.dao;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import com.sunbeam.entity.Blog;
+import com.sunbeam.utils.DbUtil;
+
+public class BlogDao implements AutoCloseable {
+
+	private Connection connection;
+
+	public BlogDao() throws SQLException {
+		connection = DbUtil.getConnection();
+	}
+
+	public void addBlog(Blog blog) throws SQLException {
+		String sql = "INSERT INTO blogs (title, contents, created_time, user_id, category_id) VALUES (?, ?, ?, ?, ?)";
+		try (PreparedStatement ps = connection.prepareStatement(sql)) {
+			ps.setString(1, blog.getTitle());
+			ps.setString(2, blog.getContents());
+			ps.setTimestamp(3, new java.sql.Timestamp(blog.getCreated_time().getTime()));
+			ps.setInt(4, blog.getUser_id());
+			ps.setInt(5, blog.getCategory_id());
+			ps.executeUpdate();
+			System.out.println("Blog added successfully.");
+		}
+	}
+
+	// Update Blog
+	public void updateBlog(Blog blog) throws SQLException {
+		// Check if the category exists, if not, insert it
+		int categoryId = blog.getCategory_id();
+		if (!categoryExists(categoryId)) {
+			insertCategory(categoryId, "Default Category"); // Provide a default name or fetch from the blog object
+		}
+
+		String sql = "UPDATE blogs SET title = ?, contents = ?, created_time = ?, user_id = ?, category_id = ? WHERE id = ?";
+		try (PreparedStatement ps = connection.prepareStatement(sql)) {
+			ps.setString(1, blog.getTitle());
+			ps.setString(2, blog.getContents());
+			ps.setTimestamp(3, new java.sql.Timestamp(blog.getCreated_time().getTime()));
+			ps.setInt(4, blog.getUser_id());
+			ps.setInt(5, blog.getCategory_id());
+			ps.setInt(6, blog.getId());
+			ps.executeUpdate();
+			System.out.println("Blog updated successfully.");
+		}
+	}
+
+	private boolean categoryExists(int categoryId) throws SQLException {
+		String sql = "SELECT id FROM categories WHERE id = ?";
+		try (PreparedStatement ps = connection.prepareStatement(sql)) {
+			ps.setInt(1, categoryId);
+			try (ResultSet rs = ps.executeQuery()) {
+				return rs.next();
+			}
+		}
+	}
+
+	private void insertCategory(int categoryId, String categoryName) throws SQLException {
+		String sql = "INSERT INTO categories (id, title, description) VALUES (?, ?, ?)";
+		try (PreparedStatement ps = connection.prepareStatement(sql)) {
+			ps.setInt(1, categoryId);
+			ps.setString(2, categoryName);
+			ps.setString(3, "Default Description"); // Provide a default description or fetch from the blog object
+			ps.executeUpdate();
+			System.out.println("New category inserted with ID: " + categoryId);
+		}
+	}
+
+	public void deleteBlog(int blogId) throws SQLException {
+		String sql = "DELETE FROM blogs WHERE id = ?";
+		try (PreparedStatement ps = connection.prepareStatement(sql)) {
+			ps.setInt(1, blogId);
+			int rowsAffected = ps.executeUpdate();
+			if (rowsAffected > 0) {
+				System.out.println("Blog with ID " + blogId + " deleted successfully.");
+			} else {
+				System.out.println("Blog with ID " + blogId + " not found.");
+			}
+		}
+	}
+
+	public List<Blog> searchBlogs(String searchTerm) throws SQLException {
+		List<Blog> searchResults = new ArrayList<>();
+		String sql = "SELECT * FROM blogs WHERE title LIKE ? OR contents LIKE ?";
+		try (PreparedStatement ps = connection.prepareStatement(sql)) {
+			// Use %searchTerm% for searching similar strings
+			ps.setString(1, "%" + searchTerm + "%");
+			ps.setString(2, "%" + searchTerm + "%");
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					int id = rs.getInt("id");
+					String title = rs.getString("title");
+					String contents = rs.getString("contents");
+					// Assuming created_time, user_id, and category_id are needed
+					Date created_time = rs.getDate("created_time");
+					int user_id = rs.getInt("user_id");
+					int category_id = rs.getInt("category_id");
+
+					Blog blog = new Blog();
+					blog.setId(id);
+					blog.setTitle(title);
+					blog.setContents(contents);
+					blog.setCreated_time(created_time);
+					blog.setUser_id(user_id);
+					blog.setCategory_id(category_id);
+
+					searchResults.add(blog);
+				}
+			}
+		}
+		return searchResults;
+	}
+
+	// Get Blogs by User ID
+	public List<Blog> getBlogsByUserId(int userId) throws SQLException {
+		List<Blog> userBlogs = new ArrayList<>();
+		String sql = "SELECT * FROM blogs WHERE user_id = ?";
+		try (PreparedStatement ps = connection.prepareStatement(sql)) {
+			ps.setInt(1, userId);
+			try (ResultSet rs = ps.executeQuery()) {
+				while (rs.next()) {
+					int id = rs.getInt("id");
+					String title = rs.getString("title");
+					String contents = rs.getString("contents");
+					Date created_time = rs.getDate("created_time");
+					int category_id = rs.getInt("category_id");
+
+					Blog blog = new Blog();
+					blog.setId(id);
+					blog.setTitle(title);
+					blog.setContents(contents);
+					blog.setCreated_time(created_time);
+					blog.setUser_id(userId); // Set the user_id
+					blog.setCategory_id(category_id);
+
+					userBlogs.add(blog);
+				}
+			}
+		}
+		return userBlogs;
+	}
+
+	public List<Blog> getAllBlogs() throws SQLException {
+		List<Blog> allBlogs = new ArrayList<>();
+		String sql = "SELECT * FROM blogs";
+		try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+			while (rs.next()) {
+				int id = rs.getInt("id");
+				String title = rs.getString("title");
+				String contents = rs.getString("contents");
+				Date created_time = rs.getDate("created_time");
+				int user_id = rs.getInt("user_id");
+				int category_id = rs.getInt("category_id");
+
+				Blog blog = new Blog();
+				blog.setId(id);
+				blog.setTitle(title);
+				blog.setContents(contents);
+				blog.setCreated_time(created_time);
+				blog.setUser_id(user_id);
+				blog.setCategory_id(category_id);
+
+				allBlogs.add(blog);
+			}
+		}
+		return allBlogs;
+	}
+
+	@Override
+	public void close() throws Exception {
+		// TODO Auto-generated method stub
+
+	}
+
+}

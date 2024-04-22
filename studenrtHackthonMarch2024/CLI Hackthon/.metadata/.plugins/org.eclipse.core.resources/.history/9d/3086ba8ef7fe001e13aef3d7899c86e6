@@ -1,0 +1,20 @@
+package com.sunbeam.dao;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+
+import com.sunbeam.utils.DbUtil;
+
+public class UserDao implements AutoCloseable {
+	private Connection connection;
+
+	public UserDao() throws SQLException {
+		connection = DbUtil.getConnection();
+	}
+
+	@Override
+	public void close() throws Exception {
+		// TODO Auto-generated method stub
+
+	}
+}

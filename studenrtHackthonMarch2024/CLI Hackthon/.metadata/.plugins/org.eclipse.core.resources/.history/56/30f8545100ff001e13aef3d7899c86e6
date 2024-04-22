@@ -1,0 +1,37 @@
+package com.sunbeam.dao;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+import com.sunbeam.entity.Blog;
+import com.sunbeam.utils.DbUtil;
+
+public class BlogDao implements AutoCloseable {
+
+	private Connection connection;
+
+	public BlogDao() throws SQLException {
+		connection = DbUtil.getConnection();
+	}
+
+	public void addBlog(Blog blog) throws SQLException {
+		String sql = "INSERT INTO blogs (title, contents, created_time, user_id, category_id) VALUES (?, ?, ?, ?, ?)";
+		try (PreparedStatement ps = connection.prepareStatement(sql)) {
+			ps.setString(1, blog.getTitle());
+			ps.setString(2, blog.getContents());
+			ps.setTimestamp(3, new java.sql.Timestamp(blog.getCreated_time().getTime()));
+			ps.setInt(4, blog.getUser_id());
+			ps.setInt(5, blog.getCategory_id());
+			ps.executeUpdate();
+			System.out.println("Blog added successfully.");
+		}
+	}
+
+	@Override
+	public void close() throws Exception {
+		// TODO Auto-generated method stub
+
+	}
+
+}

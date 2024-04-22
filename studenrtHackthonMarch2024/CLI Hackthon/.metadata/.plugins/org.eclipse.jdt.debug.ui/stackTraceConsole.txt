@@ -1,0 +1,15 @@
+   int userId = 1;
+            List<Blog> userBlogs = blogDAO.getBlogsByUserId(userId);
+
+            if (userBlogs.isEmpty()) {
+                System.out.println("No blogs found for user with ID: " + userId);
+            } else {
+                System.out.println("Blogs created by user with ID " + userId + ":");
+                for (Blog blog : userBlogs) {
+                    System.out.println(blog);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }

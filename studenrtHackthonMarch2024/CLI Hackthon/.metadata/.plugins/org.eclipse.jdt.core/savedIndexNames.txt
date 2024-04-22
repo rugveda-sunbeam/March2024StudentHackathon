@@ -1,0 +1,4 @@
+INDEX VERSION 1.134+H:\studenrtHackthonMarch2024\CLI Hackthon\.metadata\.plugins\org.eclipse.jdt.core
+1197040080.index
+2165129303.index
+1865797976.index
