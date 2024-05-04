@@ -1,0 +1,375 @@
+package com.sunbeam.tester;
+
+import java.sql.SQLException;
+import java.util.Date;
+import java.util.List;
+import java.util.Scanner;
+
+import com.sunbeam.dao.BlogDao;
+import com.sunbeam.dao.CategoryDAO;
+import com.sunbeam.dao.UserDao;
+import com.sunbeam.entity.Blog;
+import com.sunbeam.entity.Category;
+import com.sunbeam.entity.User;
+
+public class BlogWriting {
+
+	static final Scanner scanner = new Scanner(System.in);
+
+	public static void register() throws SQLException {
+
+		System.out.println("Welcome! Please enter your information to register:");
+
+		System.out.print("Full Name: ");
+		scanner.nextLine();
+		String fullName = scanner.nextLine();
+
+		System.out.print("Email: ");
+		String email = scanner.nextLine();
+
+		System.out.print("Password: ");
+		String password = scanner.nextLine();
+
+		System.out.print("Phone: ");
+		String phone = scanner.nextLine();
+
+		scanner.close();
+
+		User user = new User(fullName, email, password, phone);
+		UserDao userDao = new UserDao();
+		userDao.register(user);
+
+		System.out.println("Registration successful!");
+	}
+
+	public static User signIn() throws SQLException {
+		UserDao userDao = new UserDao();
+
+		System.out.println("Sign In:");
+		System.out.print("Enter email: ");
+		scanner.nextLine();
+		String email = scanner.nextLine();
+
+		System.out.print("Enter password: ");
+		String password = scanner.nextLine();
+
+		User user = userDao.signIn(email, password);
+		if (user != null) {
+			System.out.println(user.getEmail() + " User Successfully Logged In");
+		} else {
+			System.out.println("Invalid email or password. Sign in failed.");
+		}
+
+		return user;
+	}
+
+	public static int mainMenu(User user) {
+		System.out.println("Welcome " + user.getFull_name());
+		System.out.println("\n--- Main Menu ---");
+		System.out.println("1. Add Category");
+		System.out.println("2. Show Categories");
+		System.out.println("3. All Blogs");
+		System.out.println("4. My Blogs");
+		System.out.println("5. Add Blog");
+		System.out.println("6. Edit Blog");
+		System.out.println("7. Search Blog");
+		System.out.println("8. Delete Blog");
+		System.out.println("9. Logout");
+		System.out.print("Enter your choice: ");
+		int choice = scanner.nextInt();
+		return choice;
+	}
+
+	public static void addCategory() {
+		try (CategoryDAO categoryDAO = new CategoryDAO()) {
+			System.out.println("Enter the title of the new category:");
+			String title = scanner.nextLine();
+
+			System.out.println("Enter the description of the new category:");
+			String description = scanner.nextLine();
+
+			// Create a new Category object
+			Category newCategory = new Category(title, description);
+
+			// Add the new category
+			categoryDAO.addCategory(newCategory);
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+
+	}
+
+	public static void ShowAllCategory() {
+		try (CategoryDAO categoryDAO = new CategoryDAO()) {
+			List<Category> allCategories = categoryDAO.getAllCategories();
+			System.out.println("\n--- All Categories ---");
+			for (Category category : allCategories) {
+				System.out.println(category);
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+	}
+
+	public static void viewAllBlogs() throws Exception {
+		try (BlogDao blogDao = new BlogDao()) {
+			List<Blog> allBlogs = blogDao.getAllBlogs();
+
+			if (allBlogs.isEmpty()) {
+				System.out.println("No blogs found in the database.");
+			} else {
+				System.out.println("All Blogs:");
+				for (Blog blog : allBlogs) {
+					System.out.println(blog);
+				}
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	static void mainMenuImpl(User user) {
+
+		System.out.println(user);
+		while (true) {
+			int choice = mainMenu(user);
+			switch (choice) {
+			case 1:
+				addCategory();
+				break;
+			case 2:
+				ShowAllCategory();
+				break;
+			case 3:
+				try {
+					viewAllBlogs();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				break;
+			case 4:
+				try {
+					getBlogByUser(user);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				break;
+			case 5:
+				try {
+					addBlog(user);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				break;
+			case 6:
+				try {
+					updateBlog();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			case 7:
+				try {
+					searchBlog();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+				break;
+			
+			case 8:
+				
+				try {
+					deleteBlog();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+
+			default:
+				break;
+			}
+		}
+
+	}
+
+	public static void addBlog(User user) throws Exception {
+		try (BlogDao blogDAO = new BlogDao()) {
+			System.out.println("Enter the title of the new blog:");
+			scanner.nextLine();
+			String title = scanner.nextLine();
+
+			System.out.println("Enter the contents of the new blog:");
+			scanner.nextLine();
+			String contents = scanner.nextLine();
+
+			
+			int userId = user.getId();
+
+			System.out.println("Enter the category ID for the new blog:");
+			int categoryId = scanner.nextInt();
+
+			// Create a new Blog object
+			Blog newBlog = new Blog(title, contents, userId, categoryId);
+
+			// Add the blog to the database
+			blogDAO.addBlog(newBlog);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	public static void updateBlog() throws Exception {
+		try (BlogDao blogDao = new BlogDao()) {
+
+			System.out.println("Enter the ID of the blog you want to update:");
+			int blogId = scanner.nextInt();
+			scanner.nextLine(); // Consume newline
+
+			// Retrieve the current blog information
+			Blog currentBlog = blogDao.getBlogById(blogId);
+			if (currentBlog == null) {
+				System.out.println("Blog with ID " + blogId + " not found.");
+				return;
+			}
+
+			System.out.println("Current Title: " + currentBlog.getTitle());
+			System.out.println("Current Contents: " + currentBlog.getContents());
+
+			System.out.println("Enter the new title (or press Enter to keep current title):");
+			String newTitle = scanner.nextLine();
+			if (newTitle.isEmpty()) {
+				newTitle = currentBlog.getTitle(); // Keep current title
+			}
+
+			System.out.println("Enter the new contents (or press Enter to keep current contents):");
+			String newContents = scanner.nextLine();
+			if (newContents.isEmpty()) {
+				newContents = currentBlog.getContents(); // Keep current contents
+			}
+
+			// Update the blog with new title, contents, and updated_time
+			Blog updatedBlog = new Blog();
+			updatedBlog.setId(blogId);
+			updatedBlog.setTitle(newTitle);
+			updatedBlog.setContents(newContents);
+			// Keep current created_time
+			updatedBlog.setCreated_time(new Date()); // Set updated_time to current time
+
+			// For user_id and category_id, you may get from user input or assume a value
+			// For demonstration, assuming user_id and category_id as 1
+			updatedBlog.setUser_id(currentBlog.getUser_id()); // Keep current user_id
+			updatedBlog.setCategory_id(currentBlog.getCategory_id()); // Keep current category_id
+
+			// Update the blog
+			blogDao.updateBlog(updatedBlog);
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void deleteBlog() throws Exception {
+		try (BlogDao blogDao = new BlogDao()) {
+			int blogIdToDelete = scanner.nextInt();
+			scanner.nextLine(); // Consume newline
+
+			// Delete the blog
+			blogDao.deleteBlog(blogIdToDelete);
+
+		} catch (
+
+		SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void searchBlog() throws Exception {
+		try (BlogDao blogDao = new BlogDao()) {
+			;
+
+			// Search for blogs with "java" in title or contents
+			System.out.println("Enter the search term:");
+			String searchTerm = scanner.nextLine();
+
+			List<Blog> searchResults = blogDao.searchBlogs(searchTerm);
+
+			if (searchResults.isEmpty()) {
+				System.out.println("No blogs found matching the search term: " + searchTerm);
+			} else {
+				System.out.println("Search results for '" + searchTerm + "':");
+				for (Blog blog : searchResults) {
+					System.out.println(blog);
+				}
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void getBlogByUser(User user) throws Exception {
+		try (BlogDao blogDao = new BlogDao()) {
+			
+			int userId =user.getId();
+			List<Blog> userBlogs = blogDao.getBlogsByUserId(userId);
+
+			if (userBlogs.isEmpty()) {
+				System.out.println("No blogs found for user with ID: " + userId);
+			} else {
+				System.out.println("Blogs created by user with ID " + userId + ":");
+				for (Blog blog : userBlogs) {
+					System.out.println(blog);
+				}
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static int menu() {
+
+		int choice;
+		System.out.println("0.Exit");
+		System.out.println("1.Login");
+		System.out.println("2.Register");
+		System.out.print("Enter your choice: ");
+		choice = scanner.nextInt();
+		return choice;
+	}
+
+	public static void main(String[] args) throws Exception {
+		// TODO Auto-generated method stub
+
+		int ch = menu();
+
+		switch (ch) {
+		case 0:
+			System.exit(0);
+			break;
+
+		case 1:
+			User user = signIn();
+
+			mainMenuImpl(user);
+
+			break;
+
+		case 2:
+			register();
+			break;
+		default:
+			break;
+		}
+
+	}
+
+}
